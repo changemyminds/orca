@@ -26,6 +26,7 @@ import {
   notifyDirectWorkItemAgentStartTimeout
 } from '@/lib/launch-work-item-direct-agent'
 import { getDirectWorkItemDraftContent } from '@/lib/launch-work-item-direct-draft'
+import { resolveLinkedWorkItemAutoSubmitPrompt } from '@/lib/linked-work-item-context'
 import {
   resolveDirectPrStartPoint,
   resolveDirectSetupDecision
@@ -76,7 +77,9 @@ export async function launchWorkItemDirect(args: LaunchWorkItemDirectArgs): Prom
   // Why: preflight (PR base + hooks probe) must run on the repo's owner host so it
   // matches the owner-routed createWorktree below, not the focused runtime.
   const repoOwnerSettings = getSettingsForRepoRuntimeOwner(store, repoId)
-  const promptDelivery = args.promptDelivery ?? 'draft'
+  const promptDelivery =
+    args.promptDelivery ??
+    (resolveLinkedWorkItemAutoSubmitPrompt(item, '', settings) ? 'submit-after-ready' : 'draft')
   const repoConnectionId = repo.connectionId?.trim() || null
   const githubIdentity =
     item.number !== null && (item.type === 'issue' || item.type === 'pr')
@@ -167,7 +170,11 @@ export async function launchWorkItemDirect(args: LaunchWorkItemDirectArgs): Prom
   let draftLaunchedNatively = false
   let plan: AgentSessionLaunchPlan | null = null
   let structuredLaunchCompleted = false
-  const draftContent = await getDirectWorkItemDraftContent(item, repoConnectionId)
+  const draftContent = await getDirectWorkItemDraftContent(
+    item,
+    repoConnectionId,
+    settings?.linkedWorkItemPromptTemplate
+  )
   let startupPlanFailed = false
   try {
     const result = await store.createWorktree(

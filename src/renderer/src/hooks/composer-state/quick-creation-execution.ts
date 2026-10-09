@@ -40,7 +40,10 @@ import { settleComposerSubmit } from '@/lib/composer-submit-cancellation'
 import { getActiveRuntimeTarget } from '@/runtime/runtime-rpc-client'
 import { runBackgroundWorktreeCreation } from '@/lib/worktree-creation-flow'
 import { translate } from '@/i18n/i18n'
-import { resolveQuickCreateLinkedWorkItemPrompt } from '@/lib/linked-work-item-context'
+import {
+  resolveLinkedWorkItemAutoSubmitPrompt,
+  resolveQuickCreateLinkedWorkItemPrompt
+} from '@/lib/linked-work-item-context'
 import { buildQuickComposerStartup } from './quick-startup-plan'
 import { buildQuickCreationRequest } from './quick-creation-request'
 import type { PendingSmartGitHubSubmitResolution } from './source-selection-decisions'
@@ -120,8 +123,18 @@ export function useQuickCreationExecution(input: QuickCreationExecutionInput) {
 
       const promptLinkedWorkItem = agent === null ? null : submitLinkedWorkItem
 
-      const { prompt: quickPrompt, draftPrompt: quickDraftPrompt } =
-        resolveQuickCreateLinkedWorkItemPrompt(promptLinkedWorkItem, trimmedNote)
+      const linkedAutoSubmitPrompt = resolveLinkedWorkItemAutoSubmitPrompt(
+        promptLinkedWorkItem,
+        trimmedNote,
+        settings
+      )
+      const { prompt: quickPrompt, draftPrompt: quickDraftPrompt } = linkedAutoSubmitPrompt
+        ? { prompt: linkedAutoSubmitPrompt, draftPrompt: null }
+        : resolveQuickCreateLinkedWorkItemPrompt(
+            promptLinkedWorkItem,
+            trimmedNote,
+            settings?.linkedWorkItemPromptTemplate
+          )
 
       const {
         startupPlan,

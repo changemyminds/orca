@@ -8893,7 +8893,11 @@
           "integrationsHint": "Credentials for all providers also live under",
           "integrationsLink": "Integrations",
           "skillHint": ". After Linear is connected, usage examples stay under Settings → Linear.",
-          "incompleteBannerBodyWithLinear": "Hide providers you do not use, or expand a card and finish its steps. For Linear: API access, the agent skill, and Show in Tasks."
+          "incompleteBannerBodyWithLinear": "Hide providers you do not use, or expand a card and finish its steps. For Linear: API access, the agent skill, and Show in Tasks.",
+          "linkedWorkItemPromptPlaceholders": "Placeholders:",
+          "linkedWorkItemPromptEmptyHint": "Leave empty to keep the default draft. Ticket descriptions and comments are never inserted.",
+          "linkedWorkItemPromptAutoSubmit": "Send automatically",
+          "linkedWorkItemPromptAutoSubmitDescription": "Submit the rendered template once the agent is ready instead of leaving it as a draft. The title comes from the item author, so avoid it in auto-sent templates."
         },
         "TerminalAppearanceSection": {
           "a14a427ae4": "Thickness of the pane divider line.",
@@ -10789,7 +10793,11 @@
             "setup": "setup",
             "apiKey": "api key",
             "skill": "skill",
-            "connect": "connect"
+            "connect": "connect",
+            "linkedWorkItemPromptTitle": "Linked Work Item Prompt",
+            "linkedWorkItemPromptDescription": "Template for the agent draft when a workspace starts from a GitHub, GitLab, Linear, or Jira item.",
+            "promptKw": "prompt",
+            "templateKw": "template"
           }
         },
         "terminal": {

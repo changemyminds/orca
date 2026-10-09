@@ -20,6 +20,22 @@ export const getTasksPaneSearchKeywords = createLocalizedCatalog(() => [
   ...translateSearchKeyword('auto.components.settings.tasks.search.connect', 'connect')
 ])
 
+export const getTasksLinkedWorkItemPromptSearchEntry = createLocalizedCatalog(() => ({
+  title: translate(
+    'auto.components.settings.tasks.search.linkedWorkItemPromptTitle',
+    'Linked Work Item Prompt'
+  ),
+  description: translate(
+    'auto.components.settings.tasks.search.linkedWorkItemPromptDescription',
+    'Template for the agent draft when a workspace starts from a GitHub, GitLab, Linear, or Jira item.'
+  ),
+  keywords: [
+    ...translateSearchKeyword('auto.components.settings.tasks.search.promptKw', 'prompt'),
+    ...translateSearchKeyword('auto.components.settings.tasks.search.templateKw', 'template'),
+    ...translateSearchKeyword('auto.components.settings.tasks.search.skill', 'skill')
+  ]
+}))
+
 export const getTasksPaneSearchEntries = createLocalizedCatalog(() => [
   {
     title: translate('auto.components.settings.tasks.search.5b8e4aace5', 'Task Providers'),
@@ -28,5 +44,6 @@ export const getTasksPaneSearchEntries = createLocalizedCatalog(() => [
       'Connect task providers, install the Linear agent skill, and choose what appears in Tasks.'
     ),
     keywords: getTasksPaneSearchKeywords()
-  }
+  },
+  getTasksLinkedWorkItemPromptSearchEntry()
 ])

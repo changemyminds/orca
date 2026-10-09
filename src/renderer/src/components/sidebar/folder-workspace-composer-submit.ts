@@ -22,6 +22,10 @@ import { beginStructuredAgentSessionProvisionalLaunch } from '@/lib/structured-a
 import { getNewWorkspaceProjectGroupHostId } from '@/lib/new-workspace-project-options'
 import { useAppStore } from '@/store'
 import {
+  resolveLinkedWorkItemAutoSubmitPrompt,
+  type LinkedWorkItemPromptSettings
+} from '@/lib/linked-work-item-context'
+import {
   buildFolderWorkspaceLinkedStartupPlan,
   getFolderWorkspaceAgentLaunchPlatform,
   resolveFolderWorkspaceLaunchDraft
@@ -50,6 +54,7 @@ type SubmitFolderWorkspaceCreateParams = {
   linkedWorkItem: LinkedWorkItemSummary | null
   linkedTaskSourceContext?: TaskSourceContext | null
   note: string
+  linkedWorkItemPromptSettings?: LinkedWorkItemPromptSettings | null
   quickAgent: TuiAgent | null
   autoRenameBranchFromWork: boolean | undefined
   agentCmdOverrides: Record<string, string> | undefined
@@ -70,6 +75,7 @@ export async function submitFolderWorkspaceCreate({
   linkedWorkItem,
   linkedTaskSourceContext,
   note,
+  linkedWorkItemPromptSettings,
   quickAgent,
   autoRenameBranchFromWork,
   agentCmdOverrides,
@@ -96,12 +102,18 @@ export async function submitFolderWorkspaceCreate({
     isRemote: launchIsRemote,
     terminalWindowsShell
   })
+  const linkedWorkItemPromptTemplate = linkedWorkItemPromptSettings?.linkedWorkItemPromptTemplate
+  const linkedAutoSubmitPrompt = linkedWorkItem
+    ? resolveLinkedWorkItemAutoSubmitPrompt(linkedWorkItem, note, linkedWorkItemPromptSettings)
+    : null
+  const useLinkedDraft = Boolean(quickAgent && linkedWorkItem && !linkedAutoSubmitPrompt)
   const startupPlan =
-    quickAgent && linkedWorkItem
+    quickAgent && linkedWorkItem && useLinkedDraft
       ? buildFolderWorkspaceLinkedStartupPlan({
           agent: quickAgent,
           linkedWorkItem,
           note,
+          promptTemplate: linkedWorkItemPromptTemplate,
           agentCmdOverrides,
           agentArgs,
           agentEnv,
@@ -112,7 +124,7 @@ export async function submitFolderWorkspaceCreate({
       : quickAgent
         ? buildAgentStartupPlan({
             agent: quickAgent,
-            prompt: note,
+            prompt: linkedAutoSubmitPrompt ?? note,
             cmdOverrides: agentCmdOverrides ?? {},
             agentArgs,
             agentEnv,
@@ -125,7 +137,9 @@ export async function submitFolderWorkspaceCreate({
   // Why: the argv-prefill plan carries the draft inside `launchCommand`, so
   // `startupPlan.draftPrompt` alone can't tell whether this launch has one.
   const launchDraftPrompt =
-    quickAgent && linkedWorkItem ? resolveFolderWorkspaceLaunchDraft(linkedWorkItem, note) : null
+    useLinkedDraft && linkedWorkItem
+      ? resolveFolderWorkspaceLaunchDraft(linkedWorkItem, note, linkedWorkItemPromptTemplate)
+      : null
   const plan = quickAgent
     ? planAgentSessionLaunch(useAppStore.getState(), {
         requestId: newAgentLaunchRequestId(),
@@ -135,7 +149,7 @@ export async function submitFolderWorkspaceCreate({
           runtimeEnvironmentId,
           executionHostId: getNewWorkspaceProjectGroupHostId(projectGroup)
         },
-        prompt: launchDraftPrompt ?? note,
+        prompt: launchDraftPrompt ?? linkedAutoSubmitPrompt ?? note,
         promptDelivery: launchDraftPrompt ? 'draft' : 'auto-submit'
       })
     : null

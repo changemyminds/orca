@@ -4,6 +4,7 @@ import {
   buildLinearLaunchContextBlock,
   getLaunchableWorkItemDraftContent,
   LINKED_CONTEXT_BLOCK_MAX_CHARS,
+  resolveLinkedWorkItemAutoSubmitPrompt,
   resolveQuickCreateLinkedWorkItemPrompt
 } from './linked-work-item-context'
 
@@ -245,5 +246,103 @@ describe('getLaunchableWorkItemDraftContent', () => {
         url: 'https://linear.app/acme/issue/ENG-123/test'
       })
     ).toBe('Linked Linear issue\nhttps://linear.app/acme/issue/ENG-123/test\n')
+  })
+})
+
+describe('linked work item prompt template', () => {
+  const GITHUB_PR_URL = 'https://github.com/org/repo/pull/123'
+  const GITHUB_PR = {
+    provider: 'github' as const,
+    type: 'pr' as const,
+    number: 123,
+    url: GITHUB_PR_URL,
+    title: 'Fix login redirect'
+  }
+
+  it('keeps every default draft unchanged without a template', () => {
+    for (const promptTemplate of [undefined, '', '  ']) {
+      expect(getLaunchableWorkItemDraftContent({ ...GITHUB_PR, promptTemplate })).toBe(
+        GITHUB_PR_URL
+      )
+      expect(getLaunchableWorkItemDraftContent({ ...LINEAR_ITEM, promptTemplate })).toBe(
+        getLaunchableWorkItemDraftContent(LINEAR_ITEM)
+      )
+      expect(resolveQuickCreateLinkedWorkItemPrompt(GITHUB_PR, 'note', promptTemplate)).toEqual(
+        resolveQuickCreateLinkedWorkItemPrompt(GITHUB_PR, 'note')
+      )
+      expect(
+        resolveQuickCreateLinkedWorkItemPrompt(
+          { ...LINEAR_ITEM, number: 0 },
+          'note',
+          promptTemplate
+        )
+      ).toEqual(resolveQuickCreateLinkedWorkItemPrompt({ ...LINEAR_ITEM, number: 0 }, 'note'))
+    }
+  })
+
+  it('drafts the rendered template for direct launches', () => {
+    expect(
+      getLaunchableWorkItemDraftContent({ ...GITHUB_PR, promptTemplate: '/code-review {{url}}' })
+    ).toBe('/code-review https://github.com/org/repo/pull/123')
+  })
+
+  it('lets explicit paste content win over the template', () => {
+    expect(
+      getLaunchableWorkItemDraftContent({
+        ...GITHUB_PR,
+        pasteContent: 'fix these checks',
+        promptTemplate: '/code-review {{url}}'
+      })
+    ).toBe('fix these checks')
+  })
+
+  it('drafts the note above the rendered template for quick creates', () => {
+    expect(
+      resolveQuickCreateLinkedWorkItemPrompt(GITHUB_PR, '  focus on auth  ', '/code-review {{url}}')
+    ).toEqual({
+      prompt: '',
+      draftPrompt: 'focus on auth\n\n/code-review https://github.com/org/repo/pull/123'
+    })
+  })
+
+  it('replaces the Linear reference block and never adds ticket prose', () => {
+    const draft = getLaunchableWorkItemDraftContent({
+      ...LINEAR_ITEM,
+      promptTemplate: '/plan {{identifier}} {{url}}'
+    })
+    expect(draft).toBe('/plan ENG-123 https://linear.app/acme/issue/ENG-123/test')
+    expectNoLinearTicketContent(draft)
+  })
+
+  it('falls back to the default draft when the template renders empty', () => {
+    expect(
+      getLaunchableWorkItemDraftContent({ url: GITHUB_PR_URL, promptTemplate: '{{title}}' })
+    ).toBe(GITHUB_PR_URL)
+  })
+})
+
+describe('resolveLinkedWorkItemAutoSubmitPrompt', () => {
+  const ITEM = { provider: 'github' as const, number: 5, url: 'https://github.com/o/r/pull/5' }
+  const ON = {
+    linkedWorkItemPromptTemplate: '/code-review {{url}}',
+    linkedWorkItemPromptAutoSubmit: true
+  }
+
+  it('returns the note above the rendered template when opted in', () => {
+    expect(resolveLinkedWorkItemAutoSubmitPrompt(ITEM, ' focus ', ON)).toBe(
+      'focus\n\n/code-review https://github.com/o/r/pull/5'
+    )
+  })
+
+  it.each([
+    ['settings missing', ITEM, undefined],
+    ['switch off', ITEM, { ...ON, linkedWorkItemPromptAutoSubmit: false }],
+    ['switch unset', ITEM, { linkedWorkItemPromptTemplate: '/code-review {{url}}' }],
+    ['template empty', ITEM, { ...ON, linkedWorkItemPromptTemplate: '' }],
+    ['template renders empty', ITEM, { ...ON, linkedWorkItemPromptTemplate: '{{title}}' }],
+    ['explicit paste content', { ...ITEM, pasteContent: 'fix checks' }, ON],
+    ['no linked item', null, ON]
+  ])('keeps the draft flow when %s', (_label, item, settings) => {
+    expect(resolveLinkedWorkItemAutoSubmitPrompt(item, 'note', settings)).toBeNull()
   })
 })

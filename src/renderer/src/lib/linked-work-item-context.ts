@@ -1,4 +1,9 @@
+import type { GlobalSettings } from '../../../shared/global-settings-types'
 import type { TaskProvider } from '../../../shared/task-providers'
+import {
+  renderLinkedWorkItemPromptTemplate,
+  type LinkedWorkItemPromptTemplateItem
+} from './linked-work-item-prompt-template'
 
 export type LinkedWorkItemContext = {
   provider: TaskProvider
@@ -157,9 +162,14 @@ export function getLaunchableWorkItemDraftContent(args: {
   title?: string
   linearIdentifier?: string
   linkedContext?: LinkedWorkItemContext
+  promptTemplate?: string
 }): string {
   if (args.pasteContent?.trim()) {
     return args.pasteContent
+  }
+  const templated = renderLinkedWorkItemPromptTemplate(args.promptTemplate, args)
+  if (templated) {
+    return templated
   }
   if (isLinearWorkItemReference(args)) {
     const linearBlock = buildLinearLaunchContextBlock({
@@ -184,12 +194,24 @@ export function resolveQuickCreateLinkedWorkItemPrompt(
           linearIdentifier?: string
         },
         'provider' | 'number' | 'url' | 'title' | 'linearIdentifier'
-      > & { linkedContext?: LinkedWorkItemContext })
+      > & {
+        type?: 'issue' | 'pr' | 'mr'
+        jiraIdentifier?: string
+        linkedContext?: LinkedWorkItemContext
+      })
     | null
     | undefined,
-  note: string
+  note: string,
+  promptTemplate?: string
 ): { prompt: string; draftPrompt: string | null } {
   const trimmedNote = note.trim()
+  const templated = renderLinkedWorkItemPromptTemplate(promptTemplate, linkedWorkItem)
+  if (templated) {
+    return {
+      prompt: '',
+      draftPrompt: [trimmedNote, templated].filter(Boolean).join('\n\n')
+    }
+  }
   const linearBlock = isLinearWorkItemReference(linkedWorkItem)
     ? buildLinearLaunchContextBlock({
         provider: linkedWorkItem?.provider,
@@ -210,4 +232,26 @@ export function resolveQuickCreateLinkedWorkItemPrompt(
     prompt: isLinearTypedOnly ? trimmedNote : '',
     draftPrompt
   }
+}
+
+export type LinkedWorkItemPromptSettings = Pick<
+  GlobalSettings,
+  'linkedWorkItemPromptTemplate' | 'linkedWorkItemPromptAutoSubmit'
+>
+
+/**
+ * The prompt to submit without review, or null to keep the draft flow.
+ * Why: only a user-authored template opts into auto-submit; built-in drafts
+ * and explicit paste content always stay reviewable.
+ */
+export function resolveLinkedWorkItemAutoSubmitPrompt(
+  item: (LinkedWorkItemPromptTemplateItem & { pasteContent?: string }) | null | undefined,
+  note: string,
+  settings: LinkedWorkItemPromptSettings | null | undefined
+): string | null {
+  if (settings?.linkedWorkItemPromptAutoSubmit !== true || item?.pasteContent?.trim()) {
+    return null
+  }
+  const rendered = renderLinkedWorkItemPromptTemplate(settings.linkedWorkItemPromptTemplate, item)
+  return rendered ? [note.trim(), rendered].filter(Boolean).join('\n\n') : null
 }

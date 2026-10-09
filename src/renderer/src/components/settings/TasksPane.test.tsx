@@ -152,6 +152,37 @@ describe('TasksPane', () => {
     container = null
   })
 
+  it('edits the linked work item prompt template as a global setting', async () => {
+    const updateSettings = vi.fn()
+    container = document.createElement('div')
+    document.body.appendChild(container)
+    root = createRoot(container)
+    await act(async () => {
+      root?.render(
+        <TasksPane
+          settings={{ ...baseSettings, linkedWorkItemPromptTemplate: '/review {{url}}' }}
+          updateSettings={updateSettings}
+        />
+      )
+    })
+    const textarea = container.querySelector<HTMLTextAreaElement>(
+      '#linked-work-item-prompt-template'
+    )
+    expect(textarea?.value).toBe('/review {{url}}')
+
+    await act(async () => {
+      if (!textarea) {
+        return
+      }
+      const setValue = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set
+      setValue?.call(textarea, '/code-review {{url}}')
+      textarea.dispatchEvent(new Event('input', { bubbles: true }))
+    })
+    expect(updateSettings).toHaveBeenCalledWith({
+      linkedWorkItemPromptTemplate: '/code-review {{url}}'
+    })
+  })
+
   it('frames Task Sources as a guided setup hub, not visibility-only toggles', () => {
     const markup = renderPane()
 

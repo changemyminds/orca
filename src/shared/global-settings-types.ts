@@ -80,6 +80,12 @@ export type GlobalSettings = NativeChatGlobalSettings & {
   editorAutoSave: boolean
   editorAutoSaveDelayMs: number
   editorMinimapEnabled: boolean
+  /** Template for the agent draft written when a workspace starts from a linked
+   *  work item. Supports `{{url}}`, `{{identifier}}`, `{{title}}`; empty keeps
+   *  the built-in draft. */
+  linkedWorkItemPromptTemplate?: string
+  /** Submit the rendered template instead of leaving it as a draft. Off by default. */
+  linkedWorkItemPromptAutoSubmit?: boolean
   /** Opt-in code-editor font; empty (the default) keeps following `terminalFontFamily`. */
   editorFontFamily?: string
   /** Defaults on for profiles saved before file-editor wrapping became configurable. */
