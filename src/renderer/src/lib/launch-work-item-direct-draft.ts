@@ -3,7 +3,8 @@ import type { LaunchableWorkItem } from '@/lib/launch-work-item-direct-types'
 
 export async function getDirectWorkItemDraftContent(
   item: LaunchableWorkItem,
-  _repoConnectionId: string | null
+  _repoConnectionId: string | null,
+  promptTemplate?: string
 ): Promise<string> {
-  return getLaunchableWorkItemDraftContent(item)
+  return getLaunchableWorkItemDraftContent({ ...item, promptTemplate })
 }

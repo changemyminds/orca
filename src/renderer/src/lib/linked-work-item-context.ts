@@ -1,4 +1,5 @@
 import type { TaskProvider } from '../../../shared/task-providers'
+import { renderLinkedWorkItemPromptTemplate } from './linked-work-item-prompt-template'
 
 export type LinkedWorkItemContext = {
   provider: TaskProvider
@@ -157,9 +158,14 @@ export function getLaunchableWorkItemDraftContent(args: {
   title?: string
   linearIdentifier?: string
   linkedContext?: LinkedWorkItemContext
+  promptTemplate?: string
 }): string {
   if (args.pasteContent?.trim()) {
     return args.pasteContent
+  }
+  const templated = renderLinkedWorkItemPromptTemplate(args.promptTemplate, args)
+  if (templated) {
+    return templated
   }
   if (isLinearWorkItemReference(args)) {
     const linearBlock = buildLinearLaunchContextBlock({
@@ -184,12 +190,24 @@ export function resolveQuickCreateLinkedWorkItemPrompt(
           linearIdentifier?: string
         },
         'provider' | 'number' | 'url' | 'title' | 'linearIdentifier'
-      > & { linkedContext?: LinkedWorkItemContext })
+      > & {
+        type?: 'issue' | 'pr' | 'mr'
+        jiraIdentifier?: string
+        linkedContext?: LinkedWorkItemContext
+      })
     | null
     | undefined,
-  note: string
+  note: string,
+  promptTemplate?: string
 ): { prompt: string; draftPrompt: string | null } {
   const trimmedNote = note.trim()
+  const templated = renderLinkedWorkItemPromptTemplate(promptTemplate, linkedWorkItem)
+  if (templated) {
+    return {
+      prompt: '',
+      draftPrompt: [trimmedNote, templated].filter(Boolean).join('\n\n')
+    }
+  }
   const linearBlock = isLinearWorkItemReference(linkedWorkItem)
     ? buildLinearLaunchContextBlock({
         provider: linkedWorkItem?.provider,

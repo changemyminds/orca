@@ -167,7 +167,11 @@ export async function launchWorkItemDirect(args: LaunchWorkItemDirectArgs): Prom
   let draftLaunchedNatively = false
   let plan: AgentSessionLaunchPlan | null = null
   let structuredLaunchCompleted = false
-  const draftContent = await getDirectWorkItemDraftContent(item, repoConnectionId)
+  const draftContent = await getDirectWorkItemDraftContent(
+    item,
+    repoConnectionId,
+    settings?.linkedWorkItemPromptTemplate
+  )
   let startupPlanFailed = false
   try {
     const result = await store.createWorktree(

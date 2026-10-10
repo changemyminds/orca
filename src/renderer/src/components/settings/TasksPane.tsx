@@ -15,6 +15,7 @@ import { SearchableSetting } from './SearchableSetting'
 import { SettingsSubsectionHeader } from './SettingsFormControls'
 import { CodeHostSetupSteps, JiraSetupSteps } from './TaskSourceSimpleSetup'
 import { TaskSourceLinearSetup } from './TaskSourceLinearSetup'
+import { TasksLinkedWorkItemPromptSetting } from './TasksLinkedWorkItemPromptSetting'
 import { TaskSourceProviderCard } from './TaskSourceProviderCard'
 import {
   getStalledVisibleTaskProviders,
@@ -265,6 +266,8 @@ export function TasksPane({ settings, updateSettings }: TasksPaneProps): React.J
           )}
         </p>
       </section>
+
+      <TasksLinkedWorkItemPromptSetting settings={settings} updateSettings={updateSettings} />
     </div>
   )
 }

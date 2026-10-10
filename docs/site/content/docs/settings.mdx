@@ -85,6 +85,23 @@ Settings are grouped into panes. Everything here is searchable with `Cmd-,` then
 - **Ask Before Deleting Artifacts** — optional confirmation before breaking a public link.
 - Share from an open local HTML page or Markdown editor with **Share as artifact**, or via `orca artifacts …`. See [CLI reference → Artifacts](/docs/cli/reference#artifacts).
 
+## Tasks
+
+- Task providers: connect GitHub, GitLab, Linear, or Jira, and choose which ones appear in Tasks.
+- **Linked Work Item Prompt** sets the agent draft Orca writes when you start a workspace from a linked issue, PR, MR, or ticket. Leave it empty to keep the default draft (the item URL, or the Linear reference). Orca still writes the result as a draft, so you review it before you send it. Explicit launch content, such as a fix-checks prompt, still wins. A note you type in the composer goes above the rendered template.
+
+  | Placeholder      | Value                                                                                 |
+  | ---------------- | ------------------------------------------------------------------------------------- |
+  | `{{url}}`        | Link to the item.                                                                     |
+  | `{{identifier}}` | `#123` (GitHub, GitLab issue), `!45` (GitLab MR), `ENG-12` (Linear), `PROJ-7` (Jira). |
+  | `{{title}}`      | Item title as one line, without control characters, capped at 200 characters.         |
+
+  Missing values become empty text. Other `{{…}}` tokens stay as typed, so a typo is visible in the draft. Descriptions and comments are never available: they come from third parties and can carry prompt injection. Treat `{{title}}` the same way and leave it out if you do not trust the item author.
+
+  ```text
+  /code-review {{url}}
+  ```
+
 ## Integrations
 
 - GitHub OAuth.
