@@ -2,7 +2,7 @@ import type { GlobalSettings } from '../../../../shared/global-settings-types'
 import { Textarea } from '@/components/ui/textarea'
 import { translate } from '@/i18n/i18n'
 import { SearchableSetting } from './SearchableSetting'
-import { SettingsSubsectionHeader } from './SettingsFormControls'
+import { SettingsSubsectionHeader, SettingsSwitchRow } from './SettingsFormControls'
 import { getTasksLinkedWorkItemPromptSearchEntry } from './tasks-search'
 
 // Why: literal tokens stay outside translate() so i18next never interpolates them.
@@ -49,6 +49,22 @@ export function TasksLinkedWorkItemPromptSetting({
           'Leave empty to keep the default draft. Ticket descriptions and comments are never inserted.'
         )}
       </p>
+      <SettingsSwitchRow
+        label={translate(
+          'auto.components.settings.TasksPane.linkedWorkItemPromptAutoSubmit',
+          'Send automatically'
+        )}
+        description={translate(
+          'auto.components.settings.TasksPane.linkedWorkItemPromptAutoSubmitDescription',
+          'Submit the rendered template once the agent is ready instead of leaving it as a draft. The title comes from the item author, so avoid it in auto-sent templates.'
+        )}
+        checked={settings.linkedWorkItemPromptAutoSubmit === true}
+        onChange={() =>
+          updateSettings({
+            linkedWorkItemPromptAutoSubmit: settings.linkedWorkItemPromptAutoSubmit !== true
+          })
+        }
+      />
     </SearchableSetting>
   )
 }

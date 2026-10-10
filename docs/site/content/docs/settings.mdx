@@ -88,7 +88,7 @@ Settings are grouped into panes. Everything here is searchable with `Cmd-,` then
 ## Tasks
 
 - Task providers: connect GitHub, GitLab, Linear, or Jira, and choose which ones appear in Tasks.
-- **Linked Work Item Prompt** sets the agent draft Orca writes when you start a workspace from a linked issue, PR, MR, or ticket. Leave it empty to keep the default draft (the item URL, or the Linear reference). Orca still writes the result as a draft, so you review it before you send it. Explicit launch content, such as a fix-checks prompt, still wins. A note you type in the composer goes above the rendered template.
+- **Linked Work Item Prompt** sets the agent draft Orca writes when you start a workspace from a linked issue, PR, MR, or ticket. Leave it empty to keep the default draft (the item URL, or the Linear reference). By default Orca writes the result as a draft, so you review it before you send it. Turn on **Send automatically** to submit it once the agent is ready. This only applies when the template renders, so the default draft is never sent for you. Explicit launch content, such as a fix-checks prompt, still wins. A note you type in the composer goes above the rendered template.
 
   | Placeholder      | Value                                                                                 |
   | ---------------- | ------------------------------------------------------------------------------------- |

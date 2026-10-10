@@ -107,7 +107,7 @@ export function useFolderSubmitOrchestration(input: FolderSubmitOrchestrationInp
           linkedWorkItem: submitLinkedWorkItem,
           linkedTaskSourceContext: taskSourceContext,
           note,
-          linkedWorkItemPromptTemplate: settings?.linkedWorkItemPromptTemplate,
+          linkedWorkItemPromptSettings: settings,
           quickAgent: agent,
           autoRenameBranchFromWork: settings?.autoRenameBranchFromWork,
           agentCmdOverrides: settings?.agentCmdOverrides,

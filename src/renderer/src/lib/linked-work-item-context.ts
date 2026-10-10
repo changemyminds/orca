@@ -1,5 +1,9 @@
+import type { GlobalSettings } from '../../../shared/global-settings-types'
 import type { TaskProvider } from '../../../shared/task-providers'
-import { renderLinkedWorkItemPromptTemplate } from './linked-work-item-prompt-template'
+import {
+  renderLinkedWorkItemPromptTemplate,
+  type LinkedWorkItemPromptTemplateItem
+} from './linked-work-item-prompt-template'
 
 export type LinkedWorkItemContext = {
   provider: TaskProvider
@@ -228,4 +232,26 @@ export function resolveQuickCreateLinkedWorkItemPrompt(
     prompt: isLinearTypedOnly ? trimmedNote : '',
     draftPrompt
   }
+}
+
+export type LinkedWorkItemPromptSettings = Pick<
+  GlobalSettings,
+  'linkedWorkItemPromptTemplate' | 'linkedWorkItemPromptAutoSubmit'
+>
+
+/**
+ * The prompt to submit without review, or null to keep the draft flow.
+ * Why: only a user-authored template opts into auto-submit; built-in drafts
+ * and explicit paste content always stay reviewable.
+ */
+export function resolveLinkedWorkItemAutoSubmitPrompt(
+  item: (LinkedWorkItemPromptTemplateItem & { pasteContent?: string }) | null | undefined,
+  note: string,
+  settings: LinkedWorkItemPromptSettings | null | undefined
+): string | null {
+  if (settings?.linkedWorkItemPromptAutoSubmit !== true || item?.pasteContent?.trim()) {
+    return null
+  }
+  const rendered = renderLinkedWorkItemPromptTemplate(settings.linkedWorkItemPromptTemplate, item)
+  return rendered ? [note.trim(), rendered].filter(Boolean).join('\n\n') : null
 }

@@ -359,6 +359,47 @@ describe('submitFolderWorkspaceCreate', () => {
     )
   })
 
+  it.each([
+    [false, { followupPrompt: null, draftPrompt: '/code-review https://github.com/o/r/pull/7' }],
+    [true, { followupPrompt: '/code-review https://github.com/o/r/pull/7' }]
+  ])(
+    'delivers a templated linked prompt to Devin (auto-submit: %s)',
+    async (autoSubmit, expected) => {
+      const createFolderWorkspace = vi.fn(async () => makeFolderWorkspace())
+
+      await submitFolderWorkspaceCreate({
+        projectGroup: makeProjectGroup(),
+        name: '',
+        lastAutoName: '',
+        linkedWorkItem: {
+          provider: 'github',
+          type: 'pr',
+          number: 7,
+          title: 'Templated',
+          url: 'https://github.com/o/r/pull/7'
+        },
+        linkedWorkItemPromptSettings: {
+          linkedWorkItemPromptTemplate: '/code-review {{url}}',
+          linkedWorkItemPromptAutoSubmit: autoSubmit
+        },
+        note: '',
+        quickAgent: 'devin',
+        autoRenameBranchFromWork: false,
+        agentCmdOverrides: {},
+        createFolderWorkspace,
+        onOpenChange: vi.fn()
+      })
+
+      const startup = mocks.activateAndRevealFolderWorkspace.mock.calls[0]?.[1]?.startup
+      expect(startup?.command).toBe('devin')
+      expect(mocks.ensureAgentStartupInTerminal).toHaveBeenCalledWith(
+        expect.objectContaining({
+          startup: expect.objectContaining({ agent: 'devin', ...expected })
+        })
+      )
+    }
+  )
+
   it('delivers non-linked follow-up prompts for agents that need stdin after launch', async () => {
     const createFolderWorkspace = vi.fn(async () => makeFolderWorkspace())
 
